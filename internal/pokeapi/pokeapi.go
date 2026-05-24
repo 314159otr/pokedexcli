@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 )
+
 const BASE_URL string = "https://pokeapi.co/api/v2"
 
 type LocationArea struct {
@@ -24,6 +25,14 @@ func (client *Client) GetLocationAreas(pageUrl *string) (LocationAreaResponse, e
 	if pageUrl != nil {
 		url = *pageUrl
 	}
+	if data, found := client.cache.Get(url); found {
+		locationAreaResponse := LocationAreaResponse{}
+		if err := json.Unmarshal(data, &locationAreaResponse); err != nil {
+			return LocationAreaResponse{}, err
+		}
+
+		return locationAreaResponse, nil
+	}
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -41,6 +50,8 @@ func (client *Client) GetLocationAreas(pageUrl *string) (LocationAreaResponse, e
 	if err != nil {
 		return LocationAreaResponse{}, err
 	}
+
+	client.cache.Add(url, data)
 
 	locationAreaResponse := LocationAreaResponse{}
 	if err := json.Unmarshal(data, &locationAreaResponse); err != nil {

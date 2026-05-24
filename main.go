@@ -6,7 +6,8 @@ import (
 )
 func main() {
 	timeout := 5 * time.Second
-	client := pokeapi.NewClient(timeout)
+	cacheInterval :=  5 * time.Minute
+	client := pokeapi.NewClient(timeout, cacheInterval)
 	config := &config{
 		client: client,
 	}
