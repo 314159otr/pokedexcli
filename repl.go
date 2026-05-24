@@ -10,7 +10,7 @@ import (
 type cliCommand struct {
 	name 		string
 	description string
-	callback 	func(*config) error
+	callback 	func(*config, []string) error
 }
 
 type config struct {
@@ -33,7 +33,7 @@ func startRepl(config *config) {
 		word := cleanInput[0]
 		cliCommand, exists := cliCommands[word]
 		if exists {
-			cliCommand.callback(config)
+			cliCommand.callback(config, cleanInput[1:])
 		} else {
 			fmt.Println("Unknown command")
 			continue
@@ -63,10 +63,35 @@ func getCommands() map[string]cliCommand {
 			description: "Displays the names of the previous 20 location ares in the Pokemon World.",
 			callback: 	 commandMapb,
 		},
+		"explore": {
+			name: 		 "explore <location_name>",
+			description: "Displays the Pokemon from a location area",
+			callback: 	 commandExplore,
+		},
 	}
 }
 
-func commandMapb(config *config) error {
+func commandExplore(config *config, args []string) error {
+	if len(args) == 0 {
+		fmt.Println("No location area specified. Usage: explore <location_name>")
+		return fmt.Errorf("No location area specified. Usage: explore <location_name>")
+	}
+
+	fmt.Println("Exploring " + args[0] + "...")
+	locationAreaResponse, err := config.client.GetLocationAreaByName(args[0])
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Found Pokemon:")
+	for _, pokemonEncounter := range locationAreaResponse.PokemonEncounters {
+		fmt.Println(" - " + pokemonEncounter.Pokemon.Name)
+	}
+
+	return nil
+}
+
+func commandMapb(config *config, args []string) error {
 	if config.previous == nil {
 		fmt.Println("you're on the first page")
 		return nil
@@ -83,7 +108,7 @@ func commandMapb(config *config) error {
 
 	return nil
 }
-func commandMap(config *config) error {
+func commandMap(config *config, args []string) error {
 	if config.previous != nil && config.next == nil {
 		fmt.Println("you're on the last page")
 		return nil
@@ -101,7 +126,7 @@ func commandMap(config *config) error {
 	return nil
 }
 
-func commandHelp(config *config) error {
+func commandHelp(config *config, args []string) error {
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Println("Usage:")
 	fmt.Println()
@@ -112,7 +137,7 @@ func commandHelp(config *config) error {
 	return nil
 }
 
-func commandExit(config *config) error {
+func commandExit(config *config, args []string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
