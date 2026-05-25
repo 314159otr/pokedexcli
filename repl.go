@@ -80,8 +80,22 @@ func getCommands() map[string]cliCommand {
 			description: "Displays the pokemon details",
 			callback: 	 commandInspect,
 		},
+		"pokedex": {
+			name: 		 "pokedex",
+			description: "Displays all pokemon the user has caught",
+			callback: 	 commandPokedex,
+		},
 	}
 }
+
+func commandPokedex(config *config, args []string) error {
+	fmt.Println("Your Pokedex:")
+	for _, pokemon := range config.pokedex {
+		fmt.Printf(" - %v\n", pokemon.Name)
+	}
+	return nil
+}
+
 func commandInspect(config *config, args []string) error {
 	if len(args) == 0 {
 		fmt.Println("No pokemon specified. Usage: catch <pokemon_name>")
