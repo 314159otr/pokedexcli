@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"os"
 	"strings"
+	"math/rand"
 	"github.com/314159otr/pokedexcli/internal/pokeapi"
 )
 type cliCommand struct {
@@ -17,6 +18,7 @@ type config struct {
 	client	 pokeapi.Client
 	next	 *string
 	previous *string
+	pokedex  map[string]pokeapi.PokemonResponse
 }
 
 func startRepl(config *config) {
@@ -68,7 +70,34 @@ func getCommands() map[string]cliCommand {
 			description: "Displays the Pokemon from a location area",
 			callback: 	 commandExplore,
 		},
+		"catch": {
+			name: 		 "catch <pokemon_name>",
+			description: "Tries to catch a pokemon",
+			callback: 	 commandCatch,
+		},
 	}
+}
+
+func commandCatch(config *config, args []string) error {
+	if len(args) == 0 {
+		fmt.Println("No pokemon specified. Usage: catch <pokemon_name>")
+		return fmt.Errorf("No pokemon specified. Usage: catch <pokemon_name>")
+	}
+
+	pokemonResponse, err := config.client.GetPokemonByName(args[0])
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Throwing a Pokeball at %s...\n", pokemonResponse.Name)
+	chance := 100.0 / (100.0 + float64(pokemonResponse.BaseExperience))
+	caught := rand.Float64() < chance
+	if !caught {
+		fmt.Printf("%s escaped!\n", pokemonResponse.Name)
+		return nil
+	}
+	fmt.Printf("%s was caught!\n", pokemonResponse.Name)
+	config.pokedex[pokemonResponse.Name] = pokemonResponse
+	return nil
 }
 
 func commandExplore(config *config, args []string) error {

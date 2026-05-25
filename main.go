@@ -10,6 +10,7 @@ func main() {
 	client := pokeapi.NewClient(timeout, cacheInterval)
 	config := &config{
 		client: client,
+		pokedex: map[string]pokeapi.PokemonResponse{},
 	}
 	startRepl(config)
 }
